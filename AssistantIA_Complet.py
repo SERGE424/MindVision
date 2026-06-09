@@ -102,6 +102,9 @@ class AssistantIA:
         self.tts_service = ChatbotTTSService(lang=self.lang) if CHAT_TTS_AVAILABLE else None
         self.images_dir = Path(os.path.dirname(__file__)) / "images"
         self.images_dir.mkdir(exist_ok=True)
+        self.ui_settings_path = Path(os.path.dirname(__file__)) / "ui_settings_32_cartes.json"
+        self.last_image_dir_chat = str(self.images_dir)
+        self._charger_ui_settings()
         
         # Image en attente d'envoi dans le chatbot
         self.chat_pending_image = None
@@ -139,6 +142,110 @@ class AssistantIA:
         self.tts_service.speak(text)
     
     # === GESTION CONVERSATIONS ===
+
+    def _charger_ui_settings(self):
+        """Charge les réglages UI persistés."""
+        if not self.ui_settings_path.exists():
+            return
+
+        try:
+            with open(self.ui_settings_path, 'r', encoding='utf-8') as f:
+                settings = json.load(f)
+        except Exception as e:
+            print(f"Erreur chargement réglages UI: {e}")
+            return
+
+        last_dir = settings.get("last_image_dir_chat")
+        if isinstance(last_dir, str) and os.path.isdir(last_dir):
+            self.last_image_dir_chat = last_dir
+
+    def _sauvegarder_ui_settings(self):
+        """Sauvegarde les réglages UI persistés."""
+        settings = {}
+
+        if self.ui_settings_path.exists():
+            try:
+                with open(self.ui_settings_path, 'r', encoding='utf-8') as f:
+                    settings = json.load(f)
+            except Exception:
+                settings = {}
+
+        settings["last_image_dir_chat"] = self.last_image_dir_chat
+
+        try:
+            with open(self.ui_settings_path, 'w', encoding='utf-8') as f:
+                json.dump(settings, f, indent=2, ensure_ascii=False)
+        except Exception as e:
+            print(f"Erreur sauvegarde réglages UI: {e}")
+
+    def _normaliser_message_conversation(self, message):
+        """Convertit différents formats de messages en format chatbot."""
+        if not isinstance(message, dict):
+            return None
+
+        sender = message.get("sender") or message.get("role") or "IA"
+        texte = message.get("texte") or message.get("message") or ""
+        timestamp = message.get("timestamp") or datetime.now().isoformat()
+
+        if sender == "Assistant":
+            sender = "IA"
+        elif sender == "User":
+            sender = "Vous"
+
+        return {
+            "sender": sender,
+            "texte": texte,
+            "timestamp": timestamp
+        }
+
+    def _normaliser_conversation_chargee(self, conv_id, data):
+        """Normalise les anciens formats de conversation chargés depuis JSON."""
+        if not isinstance(data, dict):
+            return None
+
+        raw_messages = data.get("messages")
+        if not isinstance(raw_messages, list):
+            raw_messages = []
+
+        messages = []
+        for raw_message in raw_messages:
+            message = self._normaliser_message_conversation(raw_message)
+            if message is not None:
+                messages.append(message)
+
+        nom = data.get("nom")
+        if not isinstance(nom, str) or not nom.strip():
+            premier_texte = next((msg["texte"].strip() for msg in messages if msg["texte"].strip()), "")
+            nom = premier_texte[:40] if premier_texte else conv_id.replace("_", " ")
+
+        date_creation = data.get("date_creation") or data.get("session_started") or datetime.now().isoformat()
+
+        return {
+            "nom": nom,
+            "date_creation": date_creation,
+            "messages": messages
+        }
+
+    def _est_fichier_conversation_chatbot(self, file_path, data):
+        """Détermine si un JSON appartient à l'historique chatbot."""
+        if not isinstance(data, dict):
+            return False
+
+        stem = file_path.stem
+        if stem.startswith("chat_cartes_"):
+            return False
+
+        if "nom" in data or "date_creation" in data:
+            return True
+
+        # Certains anciens exports chatbot n'ont pas de méta, mais gardent sender/texte.
+        messages = data.get("messages")
+        if isinstance(messages, list) and messages:
+            first = messages[0]
+            if isinstance(first, dict) and ("sender" in first or "texte" in first):
+                return True
+
+        return False
     
     def charger_conversations(self):
         """Charge toutes les conversations depuis les fichiers JSON"""
@@ -150,8 +257,15 @@ class AssistantIA:
             try:
                 with open(file_path, 'r', encoding='utf-8') as f:
                     data = json.load(f)
+
+                    if not self._est_fichier_conversation_chatbot(file_path, data):
+                        continue
+
                     conv_id = file_path.stem
-                    self.conversations[conv_id] = data
+                    conversation = self._normaliser_conversation_chargee(conv_id, data)
+                    if conversation is None:
+                        continue
+                    self.conversations[conv_id] = conversation
             except Exception as e:
                 print(f"Erreur chargement conversation {file_path}: {e}")
     
@@ -423,6 +537,7 @@ class AssistantIA:
         """Ouvre un sélecteur de fichier pour joindre une image au prochain message"""
         path = filedialog.askopenfilename(
             title="Sélectionner une image",
+            initialdir=self.last_image_dir_chat,
             filetypes=[
                 ("Images", "*.png *.jpg *.jpeg *.gif *.webp *.bmp"),
                 ("Tous les fichiers", "*.*")
@@ -430,6 +545,13 @@ class AssistantIA:
         )
         if not path:
             return
+
+        try:
+            self.last_image_dir_chat = os.path.dirname(path)
+            self._sauvegarder_ui_settings()
+        except Exception:
+            pass
+
         self.chat_pending_image = path
         # Créer et afficher la miniature
         try:

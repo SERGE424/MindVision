@@ -1,0 +1,15 @@
+# Python cache / bytecode
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Local Python environments
+.venv/
+.conda/
+
+# Generated runtime data
+image/
+images/
+conversations/*.json
+conversations/_archive_non_chatbot/
+ui_settings_32_cartes.json
