@@ -6,6 +6,7 @@ requests
 chardet<6
 ollama
 gtts
+pyttsx3
 pygame
 boto3
 replicate

@@ -120,6 +120,32 @@ class TestConversationsAndUiSettings(unittest.TestCase):
         )
         self.assertFalse(result)
 
+    def test_traiter_commande_chat_accepte_alias_ronommer(self):
+        captured = {"title": None}
+
+        def fake_rename(nouveau_titre=None):
+            captured["title"] = nouveau_titre
+
+        self.app._on_renommer_conversation = fake_rename
+
+        handled = self.app._traiter_commande_chat("ronommer Projet Atlas")
+
+        self.assertTrue(handled)
+        self.assertEqual(captured["title"], "Projet Atlas")
+
+    def test_traiter_commande_chat_ignore_si_image_jointe(self):
+        captured = {"called": False}
+
+        def fake_rename(nouveau_titre=None):
+            captured["called"] = True
+
+        self.app._on_renommer_conversation = fake_rename
+
+        handled = self.app._traiter_commande_chat("renommer Titre", image_path="image.png")
+
+        self.assertFalse(handled)
+        self.assertFalse(captured["called"])
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

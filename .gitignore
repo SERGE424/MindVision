@@ -13,3 +13,11 @@ images/
 conversations/*.json
 conversations/_archive_non_chatbot/
 ui_settings_32_cartes.json
+
+# Local secrets and machine-specific config
+.env
+config.py
+
+# Personal/generated assistant artifacts
+histoires/
+serge424_profile_memory.json
