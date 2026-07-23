@@ -4,40 +4,40 @@ import sys
 print(f"Python {sys.version}")
 
 try:
-    print("✓ Test 1: Import de AssistantIA_Complet...")
+    print("Test 1: Import de AssistantIA_Complet...")
     from AssistantIA_Complet import AssistantIA
-    print("✅ Import réussi!")
-    
-    print("\n✓ Test 2: Import de Generateur...")
+    print("[OK] Import reussi!")
+
+    print("\nTest 2: Import de Generateur...")
     from Generateur import GenerateurIA
-    print("✅ Import réussi!")
-    
-    print("\n✓ Test 3: Vérification tkinter...")
+    print("[OK] Import reussi!")
+
+    print("\nTest 3: Verification tkinter...")
     import tkinter as tk
     from tkinter import ttk
-    
+
     # Test création de widgets
     root = tk.Tk()
     root.withdraw()
-    
+
     # Test Frame ttk
     frame = ttk.Frame(root)
-    print("✅ ttk.Frame créé")
-    
+    print("[OK] ttk.Frame cree")
+
     # Test Canvas avec couleur blanche
     canvas = tk.Canvas(frame, bg="white", highlightthickness=0)
-    print("✅ tk.Canvas avec bg='white' créé")
-    
+    print("[OK] tk.Canvas avec bg='white' cree")
+
     # Test Label normal
     label = tk.Label(frame, relief="sunken", background="gray20")
-    print("✅ tk.Label avec relief et background créé")
-    
+    print("[OK] tk.Label avec relief et background cree")
+
     root.destroy()
-    
-    print("\n🎉 Tous les tests passent! L'application devrait démarrer correctement.")
-    
+
+    print("\n[OK] Tous les tests passent! L'application devrait demarrer correctement.")
+
 except Exception as e:
-    print(f"❌ Erreur: {e}")
+    print(f"[ERREUR]: {e}")
     import traceback
     traceback.print_exc()
     sys.exit(1)

@@ -16,7 +16,7 @@ from prompts_library import (
 def demo_categories():
     """Affiche les catégories et descriptions"""
     print("\n" + "="*60)
-    print("📚 CATÉGORIES DISPONIBLES")
+    print("[CATEGORIES DISPONIBLES]")
     print("="*60 + "\n")
     
     for i, category in enumerate(get_all_categories(), 1):
@@ -31,20 +31,20 @@ def demo_categories():
 def demo_category(category):
     """Affiche les détails d'une catégorie"""
     print("\n" + "="*60)
-    print(f"📖 CATÉGORIE: {category.upper()}")
+    print(f"[CATEGORIE: {category.upper()}]")
     print("="*60)
     
     description = get_category_description(category)
     print(f"\nDescription: {description}\n")
     
     # Exemples positifs
-    print("✅ EXEMPLES POSITIFS:")
+    print("[EXEMPLES POSITIFS]:")
     positive = get_examples_for_category(category, negative=False)
     for i, example in enumerate(positive, 1):
         print(f"   {i}. {example}")
     
     # Exemples négatifs
-    print("\n❌ EXEMPLES NÉGATIFS (À ÉVITER):")
+    print("\n[EXEMPLES NEGATIFS (A EVITER)]:")
     negative = get_examples_for_category(category, negative=True)
     for i, example in enumerate(negative, 1):
         print(f"   {i}. {example}")
@@ -53,7 +53,7 @@ def demo_category(category):
 def demo_prompt_generation():
     """Démontre la génération de prompts avec exemples"""
     print("\n" + "="*60)
-    print("🤖 DÉMONSTRATION: GÉNÉRATION DE PROMPTS AVEC EXEMPLES")
+    print("[DEMONSTRATION: GENERATION DE PROMPTS AVEC EXEMPLES]")
     print("="*60)
     
     # Exemple 1: Portrait
@@ -65,13 +65,13 @@ def demo_prompt_generation():
         category="portrait"
     )
     
-    print("\n✅ PROMPT POSITIF GÉNÉRÉ POUR OLLAMA:")
+    print("\n[PROMPT POSITIF GENERÉ POUR OLLAMA]:")
     print("-" * 60)
     print(positive)
     print("-" * 60)
     
     if negative:
-        print("\n❌ PROMPT NÉGATIF GÉNÉRÉ POUR OLLAMA:")
+        print("\n[PROMPT NEGATIF GENERE POUR OLLAMA]:")
         print("-" * 60)
         print(negative)
         print("-" * 60)
@@ -85,7 +85,7 @@ def demo_prompt_generation():
         category="fantasy"
     )
     
-    print("\n✅ PROMPT POSITIF GÉNÉRÉ POUR OLLAMA:")
+    print("\n[PROMPT POSITIF GENERÉ POUR OLLAMA]:")
     print("-" * 60)
     print(positive)
     print("-" * 60)
@@ -94,7 +94,7 @@ def demo_prompt_generation():
 def demo_format():
     """Démontre le formatage des exemples"""
     print("\n" + "="*60)
-    print("📝 EXEMPLE DE FORMATAGE")
+    print("[EXEMPLE DE FORMATAGE]")
     print("="*60 + "\n")
     
     formatted = format_prompt_examples("landscape", negative=False, max_examples=3)
@@ -117,7 +117,7 @@ def main():
     demo_format()
     
     print("\n" + "="*60)
-    print("✅ FIN DE LA DÉMONSTRATION")
+    print("[FIN DE LA DEMONSTRATION]")
     print("="*60)
     print("\nPour utiliser dans votre application:")
     print("  from prompts_library import create_system_prompt_with_examples")

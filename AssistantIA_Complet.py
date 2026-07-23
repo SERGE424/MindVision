@@ -48,7 +48,7 @@ try:
     OLLAMA_AVAILABLE = True
 except ImportError:
     OLLAMA_AVAILABLE = False
-    print("⚠️ Ollama non installé : pip install ollama")
+    print("[ATTENTION] Ollama non installe : pip install ollama")
 
 # Import service TTS du ChatBot
 try:
@@ -326,7 +326,7 @@ try:
     PROMPTS_LIBRARY_AVAILABLE = True
 except ImportError:
     PROMPTS_LIBRARY_AVAILABLE = False
-    print("⚠️ Bibliothèque de prompts non disponible")
+    print("[ATTENTION] Bibliotheque de prompts non disponible")
 
 
 class AssistantIA:
@@ -452,9 +452,9 @@ class AssistantIA:
             
             self.sd_pipe.enable_attention_slicing()
             self.sd_pipe.to("cpu")
-            print("✅ SD-Turbo chargé (safety checker actif) !")
+            print("[OK] SD-Turbo charge (safety checker actif) !")
         except Exception as e:
-            print(f"❌ Erreur SD-Turbo : {e}")
+            print(f"[ERREUR] SD-Turbo : {e}")
 
     def speak(self, text):
         """Prononce le texte via le service TTS du ChatBot."""
@@ -511,7 +511,7 @@ class AssistantIA:
             if wait_time > 0:
                 jitter = random.uniform(0.0, max(0.0, float(self.hf_request_jitter_sec)))
                 total_wait = wait_time + jitter
-                print(f"⏱️ Espacement {source_label}: pause {total_wait:.2f}s")
+                print(f"[DELAI] Espacement {source_label}: pause {total_wait:.2f}s")
                 time.sleep(total_wait)
             self._hf_last_request_ts = time.monotonic()
     
@@ -3236,7 +3236,7 @@ Titre:"""
             except Exception as hf_error:
                 # Si HF est indisponible, basculer automatiquement sur le local quand il est prêt.
                 if self.sd_pipe is not None:
-                    print(f"⚠️ HF indisponible ({hf_error}) -> fallback local SD-Turbo")
+                    print(f"[ATTENTION] HF indisponible ({hf_error}) -> fallback local SD-Turbo")
                     return self.sd_pipe(
                         prompt=prompt,
                         negative_prompt=negative_prompt,
@@ -3426,7 +3426,7 @@ Titre:"""
                 except Exception as e:
                     img2img_errors.append(f"{api_root}: {e}")
 
-            print(f"⚠️ Img2img indisponible avec {img2img_model}: {self._format_hf_error_summary(img2img_errors)}")
+            print(f"[ATTENTION] Img2img indisponible avec {img2img_model}: {self._format_hf_error_summary(img2img_errors)}")
             print(f"   Fallback sans image d'entrée avec {HUGGING_FACE_IMAGE_MODEL}")
             input_image = None  # Désactiver l'image pour fallback
 
@@ -3872,10 +3872,10 @@ Titre:"""
     
     def assistant_creer(self):
         """Mode assistant : optimise le prompt puis génère l'image"""
-        print("🔍 DEBUG: assistant_creer() appelée")
+        print("DEBUG: assistant_creer() appelée")
         demande = self.assistant_input.get("1.0", tk.END).strip()
         has_image_prompt = self.assistant_image_prompt is not None
-        print(f"🔍 DEBUG: demande='{demande}', has_image_prompt={has_image_prompt}")
+        print(f"DEBUG: demande='{demande}', has_image_prompt={has_image_prompt}")
         
         # Vérifier qu'il y a au moins un prompt (texte ou image)
         if not demande and not has_image_prompt:
@@ -3883,7 +3883,7 @@ Titre:"""
             return
         
         mode = self.assistant_mode_combo.get()
-        print(f"🔍 DEBUG: mode='{mode}', OLLAMA_AVAILABLE={OLLAMA_AVAILABLE}, sd_pipe={self.sd_pipe is not None}")
+        print(f"DEBUG: mode='{mode}', OLLAMA_AVAILABLE={OLLAMA_AVAILABLE}, sd_pipe={self.sd_pipe is not None}")
 
         if not OLLAMA_AVAILABLE:
             self.assistant_status.config(text="❌ Services non disponibles")
@@ -3901,13 +3901,13 @@ Titre:"""
         elif has_image_prompt:
             status_msg = "🤖 L'IA optimise votre demande avec l'image..."
         
-        print(f"🔍 DEBUG: Lancement du thread avec status_msg='{status_msg}'")    
+        print(f"DEBUG: Lancement du thread avec status_msg='{status_msg}'")    
         self.assistant_status.config(text=status_msg)
         threading.Thread(target=self._assistant_thread, args=(demande,), daemon=True).start()
     
     def _assistant_thread(self, demande):
         """Thread pour l'assistant combiné"""
-        print(f"🔍 DEBUG: _assistant_thread démarré avec demande='{demande}'")
+        print(f"DEBUG: _assistant_thread démarré avec demande='{demande}'")
         try:
             # Récupérer l'image prompt si elle existe
             input_image = self.assistant_image_prompt
@@ -4007,7 +4007,7 @@ Titre:"""
                 for chunk in ollama.generate(model=self.ollama_model, prompt=prompt_optimization, system=system_prompt_positif, stream=True):
                     optimized_prompt += chunk.get('response', '')
             except Exception as _ollama_err:
-                print(f"⚠️ Ollama indisponible ({_ollama_err}) → prompt original conservé")
+                print(f"[ATTENTION] Ollama indisponible ({_ollama_err}) -> prompt original conserve")
                 optimized_prompt = demande
             
             # Étape 1b : Optimiser le prompt négatif avec Ollama
@@ -4026,7 +4026,7 @@ Titre:"""
                     for chunk in ollama.generate(model=self.ollama_model, prompt=negative_optimization, system=system_prompt_negatif, stream=True):
                         optimized_negative += chunk.get('response', '')
                 except Exception as _ollama_neg_err:
-                    print(f"⚠️ Ollama négatif indisponible ({_ollama_neg_err}) → prompt négatif original conservé")
+                    print(f"[ATTENTION] Ollama negatif indisponible ({_ollama_neg_err}) -> prompt negatif original conserve")
                     optimized_negative = user_negative_prompt
             else:
                 optimized_negative = user_negative_prompt
@@ -4101,7 +4101,7 @@ Titre:"""
         except Exception as e:
             import traceback
             error_details = traceback.format_exc()
-            print(f"❌ Erreur dans _assistant_thread: {error_details}")
+            print(f"[ERREUR] _assistant_thread: {error_details}")
             self.assistant_status.config(text=f"❌ Erreur : {e}")
             messagebox.showerror("Erreur de génération", f"Une erreur s'est produite :\n\n{str(e)[:200]}")
     
