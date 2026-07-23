@@ -1826,7 +1826,9 @@ Titre:"""
             hf_frame,
             values=[
                 "API Inference (images)",
+                "Router HF Inference (fallback TLS)",
                 "api-inference.huggingface.co",
+                "router.huggingface.co/hf-inference",
             ],
             state="readonly",
             width=25,
@@ -1984,7 +1986,9 @@ Titre:"""
             hf_frame,
             values=[
                 "API Inference (images)",
+                "Router HF Inference (fallback TLS)",
                 "api-inference.huggingface.co",
+                "router.huggingface.co/hf-inference",
             ],
             state="readonly",
             width=25,
@@ -3263,6 +3267,7 @@ Titre:"""
     def _describe_hf_endpoint_error(self, message):
         """Retourne un résumé plus précis et actionnable pour une erreur HF."""
         message = str(message or "")
+        lower_message = message.lower()
 
         endpoint_label = "HF"
         if "api-inference.huggingface.co" in message:
@@ -3272,10 +3277,23 @@ Titre:"""
         elif "router.huggingface.co" in message:
             endpoint_label = "router.huggingface.co"
 
+        if "handshake" in lower_message or "ssl" in lower_message or "certificate" in lower_message:
+            return (
+                f"{endpoint_label}: échec TLS/SSL local "
+                "(proxy/VPN/antivirus/inspection HTTPS ou chaîne certificat)"
+            )
+
+        if (
+            "name resolution" in lower_message
+            or "getaddrinfo" in lower_message
+            or "failed to resolve" in lower_message
+            or "no address associated with hostname" in lower_message
+        ):
+            return f"{endpoint_label}: résolution DNS impossible"
+
         if self._is_non_retryable_hf_error(message):
             return (
-                f"{endpoint_label}: résolution DNS impossible pour ce sous-domaine "
-                "(tester ce nom exact, proxy/VPN/antivirus possibles)"
+                f"{endpoint_label}: erreur réseau locale non récupérable"
             )
 
         if "Read timed out" in message or "Timeout" in message:
@@ -3331,10 +3349,10 @@ Titre:"""
             if not root:
                 return ""
             alias_map = {
-                # Compatibilite: l'ancien label "Root (router)" et le router /hf-inference
-                # ne doivent plus etre utilises pour les images car ils renvoient 410.
-                "Root (router)": "https://api-inference.huggingface.co",
+                # Compatibilite: conserver les anciens labels d'UI.
+                "Root (router)": "https://router.huggingface.co/hf-inference",
                 "API Inference (images)": "https://api-inference.huggingface.co",
+                "Router HF Inference (fallback TLS)": "https://router.huggingface.co/hf-inference",
                 "api-inference.co": "https://api-inference.huggingface.co",
                 "https://api-inference.co": "https://api-inference.huggingface.co",
             }
@@ -3342,18 +3360,20 @@ Titre:"""
             if "://" not in root:
                 root = f"https://{root}"
             root = root.replace("api-inference.co", "api-inference.huggingface.co")
-            if root.rstrip("/") in {
-                "https://router.huggingface.co",
-                "https://router.huggingface.co/hf-inference",
-            }:
-                root = "https://api-inference.huggingface.co"
+            if root.rstrip("/") == "https://router.huggingface.co":
+                root = "https://router.huggingface.co/hf-inference"
             return root.rstrip("/")
 
         configured_root = _normalize_api_root(HUGGING_FACE_IMAGE_API_ROOT)
         selected_root = _normalize_api_root(endpoint_override)
 
         api_roots = []
-        for candidate in (selected_root, configured_root, "https://api-inference.huggingface.co"):
+        for candidate in (
+            selected_root,
+            configured_root,
+            "https://router.huggingface.co/hf-inference",
+            "https://api-inference.huggingface.co",
+        ):
             if candidate and candidate not in api_roots:
                 api_roots.append(candidate)
 
