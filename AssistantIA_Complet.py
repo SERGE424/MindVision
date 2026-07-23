@@ -317,7 +317,7 @@ except ImportError:
             thread.start()
 
     CHAT_TTS_AVAILABLE = True
-    print("⚠️ TTS ChatBot externe non disponible : fallback interne (pyttsx3/gTTS/Windows SAPI) activé")
+    print("TTS ChatBot externe non disponible : fallback interne (pyttsx3/gTTS/Windows SAPI) active")
 
 # Import de la bibliothèque de prompts
 try:
