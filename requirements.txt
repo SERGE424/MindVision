@@ -1,0 +1,12 @@
+torch
+diffusers==0.30.3
+transformers==4.41.2
+pillow
+requests
+chardet<6
+ollama
+gtts
+pyttsx3
+pygame
+boto3
+replicate
